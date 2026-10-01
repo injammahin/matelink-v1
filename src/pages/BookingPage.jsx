@@ -1,0 +1,95 @@
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { BedDouble, Bath, House, Building2, Hotel, Check, MapPin, Sparkles, CalendarDays, Clock, ShieldCheck, Pencil, Info } from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Calendar } from '@/components/ui/calendar';
+import { PostcodeCheck } from '@/components/SiteLayout';
+import { Counter, FormField, FieldSelect } from '@/components/Shared';
+import { useApp } from '@/context/AppContext';
+import { services } from '@/data/content';
+import { availableAddons, amountLabel, calculatePrice, postcodeAvailability } from '@/lib/pricing';
+import { localISODate, formatDate } from '@/lib/dates';
+
+const steps = ['Your clean','Your home','Extras','Your date','About you','Review'];
+const propertyOptions = [{ id:'apartment', name:'Apartment', icon:Building2 },{ id:'house', name:'House', icon:House },{ id:'townhouse', name:'Townhouse', icon:Hotel }];
+function defaultDraft(params) {
+  let stored;
+  try { stored = JSON.parse(sessionStorage.getItem('matelink.booking-draft')); } catch { /* Ignore invalid preview state. */ }
+  const queryService = params.get('service');
+  const service = services.some(s=>s.id===queryService) ? queryService : stored?.service || 'deep';
+  return { service, property:stored?.property || 'apartment', bedrooms:stored?.bedrooms ?? 2, bathrooms:stored?.bathrooms ?? 1, addons: queryService && queryService !== stored?.service ? {} : stored?.addons || {}, postcode:params.get('postcode') || stored?.postcode || '', date:stored?.date || '', time:stored?.time || '', customer:stored?.customer || { name:'', email:'', mobile:'', address:'', notes:'' } };
+}
+
+function BookingSummary({ draft, settings, estimate }) {
+  const service = services.find(s=>s.id===draft.service);
+  return <Card className="booking-summary gap-0 p-0 shadow-none"><img className="booking-summary-image h-36 w-full object-cover" src={service.image} alt="" /><div className="p-6"><p className="eyebrow !text-xs">Your clean, at a glance</p><h2 className="mt-4 text-xl">{service.name}</h2><div className="mt-5 space-y-3 border-b pb-5 text-sm text-muted-foreground"><p className="flex items-center gap-2"><MapPin size={16} />{draft.postcode || 'Your postcode'}</p><p className="flex items-center gap-2"><House size={16} /><span className="capitalize">{draft.property}</span> · {draft.bedrooms} bed · {draft.bathrooms} bath</p><p className="flex items-center gap-2"><CalendarDays size={16}/>{draft.date ? formatDate(draft.date) : 'Choose a preferred date'}</p>{draft.time && <p className="flex items-center gap-2"><Clock size={16}/>{draft.time}</p>}</div><div className="space-y-3 py-5 text-sm">{estimate.items.map((item,index)=><div key={index} className="flex justify-between gap-4"><span className="text-muted-foreground">{item.label}</span><span className="shrink-0 font-medium">{item.amount === null || item.amount === undefined ? '—' : amountLabel(item.amount)}</span></div>)}</div><div className="border-t pt-5"><p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Estimated total</p><p className="mt-2 text-2xl font-semibold tracking-tight" aria-live="polite">{estimate.ready ? amountLabel(estimate.total) : 'Price to be confirmed'}</p><p className="field-help mt-3">{estimate.ready ? 'Based on your selected scope. Matelink reviews your request before confirmation.' : 'Matelink will confirm the price before you agree to the clean.'}</p><p className="field-help mt-2">{settings.taxNote}</p></div><div className="mt-5 flex gap-2 rounded-lg bg-secondary p-3 text-xs text-primary"><ShieldCheck className="shrink-0" size={16}/><span>No payment now. Your request is reviewed personally.</span></div></div></Card>;
+}
+
+export default function BookingPage() {
+  const [params] = useSearchParams();
+  const { settings, createBooking } = useApp();
+  const [draft,setDraft] = useState(()=>defaultDraft(params));
+  const [postcodeChecked,setPostcodeChecked] = useState(()=>['available','review'].includes(postcodeAvailability(defaultDraft(params).postcode,settings)));
+  const [step,setStep] = useState(0);
+  const [errors,setErrors] = useState({});
+  const [consent,setConsent] = useState(false);
+  const [submitting,setSubmitting] = useState(false);
+  const heading = useRef(null);
+  const navigate = useNavigate();
+  const estimate = calculatePrice(draft, settings);
+  const extras = availableAddons(settings,draft.service);
+
+  useEffect(()=>{ try { sessionStorage.setItem('matelink.booking-draft',JSON.stringify(draft)); } catch { /* In-memory state still works. */ } },[draft]);
+  function patch(values) { setDraft(previous=>({...previous,...values})); setErrors({}); }
+  function patchCustomer(field,value) { setDraft(previous=>({...previous,customer:{...previous.customer,[field]:value}})); setErrors(previous=>({...previous,[field]:undefined})); }
+  function changeStep(next) { setStep(next); setErrors({}); requestAnimationFrame(()=>{ heading.current?.focus(); heading.current?.scrollIntoView({block:'start',behavior:'smooth'}); }); }
+  function validate() {
+    const found = {};
+    if(step===0 && !settings.serviceRates[draft.service]?.active) found.general='This service is not currently available. Please choose another service or request a quote.';
+    if(step===3) {
+      if(!draft.date || draft.date<localISODate()) found.date='Please choose today or a future preferred date.';
+      if(!draft.time) found.time='Choose your preferred time window.';
+    }
+    if(step===4) {
+      if(draft.customer.name.trim().length<2) found.name='Enter your full name.';
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.customer.email.trim())) found.email='Enter a valid email address.';
+      const digits=draft.customer.mobile.replace(/\D/g,''); if(digits.length<8 || digits.length>15) found.mobile='Enter a valid mobile number.';
+      if(draft.customer.address.trim().length<5) found.address='Enter the address to be cleaned.';
+    }
+    if(step===5 && !consent) found.consent='Please acknowledge the request and privacy details before continuing.';
+    setErrors(found); return !Object.keys(found).length;
+  }
+  function next() { if(validate()) changeStep(step+1); }
+  function submit() {
+    if(!validate() || submitting) return;
+    setSubmitting(true);
+    try { const booking=createBooking(draft); sessionStorage.removeItem('matelink.booking-draft'); navigate(`/booking/${booking.token}?requested=1`); }
+    catch { toast.error('Your preview request could not be saved. Please try again.'); setSubmitting(false); }
+  }
+  return <div className="bg-muted pb-20"><div className="container-site pt-12"><div className="mb-9"><p className="eyebrow mb-4">A fresh start, made simple</p><h1 className="text-3xl sm:text-4xl">Let’s make it your clean.</h1><p className="body-copy mt-4 text-sm">Choose what your home needs. We’ll confirm the details personally.</p></div>
+    {!postcodeChecked ? <div className="mx-auto grid max-w-4xl gap-8 rounded-2xl border bg-white p-7 sm:grid-cols-[1fr_.8fr] sm:p-10"><div><div className="icon-square mb-6"><MapPin size={24}/></div><h2 className="mb-3 text-2xl">First, where’s your home?</h2><p className="body-copy mb-7 text-sm">Your postcode helps us check the service area before you start.</p><PostcodeCheck compact initialValue={draft.postcode} onValid={code=>{patch({postcode:code});setPostcodeChecked(true);}} /></div><img className="hidden h-full max-h-80 w-full rounded-xl object-cover sm:block" src="/images/hero.webp" alt="Calm light-filled living space" /></div> : <>
+      <div className="mb-7 flex flex-wrap items-center gap-3 text-sm"><span className="inline-flex items-center gap-2 rounded-full border bg-white px-4 py-2"><MapPin size={15} className="text-primary" />Postcode {draft.postcode}<button className="ml-1 underline underline-offset-4" onClick={()=>setPostcodeChecked(false)} aria-label="Change postcode">Change</button></span><span className="text-muted-foreground">{postcodeAvailability(draft.postcode,settings)==='available' ? 'Within the configured service area' : 'Service availability will be confirmed with your request'}</span></div>
+      <div className="booking-layout"><div><div className="step-track" aria-label="Booking progress">{steps.map((label,index)=><div className={`step-item ${index===step?'current':''} ${index<step?'done':''}`} key={label} aria-current={index===step?'step':undefined}><span className="step-circle">{index<step?<Check size={15}/>:index+1}</span><span>{label}</span></div>)}</div><section className="surface booking-surface fade-in" key={step}>
+        <p className="mb-2 text-xs font-bold uppercase tracking-wider text-primary">Step {step+1} of 6</p>
+        <h2 ref={heading} tabIndex={-1} className="mb-3 text-2xl outline-none sm:text-3xl">{['What kind of fresh start?','Tell us about your home.','A little extra attention?','When works for you?','A few details about you.','Everything look right?'][step]}</h2>
+        <p className="body-copy mb-7 text-sm">{['Choose the clean that fits this moment.','These details help shape your cleaning scope and price.','Choose optional extras for your selected service.','This is your preferred date, subject to Matelink’s confirmation.','We’ll use these details to review and confirm your request.','Review your request. There’s no payment at this stage.'][step]}</p>
+        {step===0 && <RadioGroup value={draft.service} onValueChange={value=>patch({service:value,addons:{}})} aria-label="Cleaning service" className="gap-3">{services.map(service=><Label key={service.id} htmlFor={`service-${service.id}`} className="option-card cursor-pointer" data-selected={draft.service===service.id}><img className="h-16 w-20 shrink-0 rounded-lg object-cover" src={service.image} alt="" /><div className="flex-1"><p className="text-base font-semibold">{service.name}</p><p className="field-help mt-1">{service.ideal}{!settings.serviceRates[service.id].active?' · Currently unavailable':''}</p></div><RadioGroupItem id={`service-${service.id}`} value={service.id} disabled={!settings.serviceRates[service.id].active} /></Label>)}</RadioGroup>}
+        {step===1 && <><RadioGroup value={draft.property} onValueChange={value=>patch({property:value})} aria-label="Property type" className="grid gap-3 sm:grid-cols-3">{propertyOptions.map(({id,name,icon:Icon})=><Label htmlFor={`property-${id}`} key={id} className="option-card cursor-pointer flex-col !gap-3 !p-5 text-center" data-selected={draft.property===id}><Icon size={26} className="text-primary"/><span className="text-sm font-semibold">{name}</span><RadioGroupItem id={`property-${id}`} value={id}/></Label>)}</RadioGroup><div className="mt-6"><Counter icon={BedDouble} label="Bedrooms" helper="Studio? Select 0 bedrooms." value={draft.bedrooms} min={0} max={8} onChange={bedrooms=>patch({bedrooms})}/><Counter icon={Bath} label="Bathrooms" helper="Include ensuites and separate bathrooms." value={draft.bathrooms} min={1} max={8} onChange={bathrooms=>patch({bathrooms})}/></div><p className="field-help mt-5">Larger or unusual property? <Link to="/get-a-quote" className="font-semibold text-primary underline">Request a tailored quote.</Link></p></>}
+        {step===2 && <>{extras.length>0 ? <div className="addon-grid">{extras.map(extra=>{const quantity=draft.addons[extra.id]||0;return <div className={`rounded-xl border p-5 ${quantity?'border-primary bg-secondary':'bg-white'}`} key={extra.id}><div className="flex items-start justify-between gap-3"><Label htmlFor={`extra-${extra.id}`} className="block cursor-pointer"><span className="block text-sm font-semibold">{extra.name}</span><span className="field-help mt-2 block">{extra.description}</span></Label><Checkbox id={`extra-${extra.id}`} checked={quantity>0} onCheckedChange={checked=>patch({addons:{...draft.addons,[extra.id]:checked?1:0}})} /></div><p className="mt-3 text-xs font-semibold text-primary">{extra.price===null?'Price to be confirmed':amountLabel(extra.price)}{extra.quantity ? ` / ${extra.unit}` : ''}</p>{quantity>0 && extra.quantity && <div className="mt-3"><Counter label={`${extra.unit.charAt(0).toUpperCase()+extra.unit.slice(1)}s`} value={quantity} min={1} max={30} onChange={value=>patch({addons:{...draft.addons,[extra.id]:value}})}/></div>}</div>})}</div> : <div className="rounded-xl bg-secondary p-7"><Sparkles className="mb-4 text-primary" size={25}/><h3 className="text-xl">Keep it simple, or tell us more.</h3><p className="body-copy mt-3 text-sm">You can share any special requirements in your notes, or request a tailored quote for extra work.</p><Button asChild variant="outline" className="mt-5"><Link to="/get-a-quote">Get a tailored quote</Link></Button></div>}<p className="field-help mt-5">Extras are optional. You can continue with just your selected clean.</p></>}
+        {step===3 && <div className="grid gap-6 lg:grid-cols-[1.05fr_.95fr]"><div className="rounded-xl border p-3"><Calendar mode="single" selected={draft.date ? new Date(`${draft.date}T12:00:00`) : undefined} onSelect={date=>patch({date:date?localISODate(date):''})} disabled={{before:new Date(new Date().setHours(0,0,0,0))}} defaultMonth={draft.date?new Date(`${draft.date}T12:00:00`):new Date()} className="w-full [--cell-size:2.4rem]" weekStartsOn={1} required aria-label="Choose your preferred cleaning date" /></div><div><FormField id="preferred-date" label="Preferred date" type="date" min={localISODate()} value={draft.date} onChange={e=>patch({date:e.target.value})} error={errors.date}/><div className="mt-5"><FieldSelect id="preferred-time" label="Preferred time" value={draft.time} onChange={time=>patch({time})} options={['Morning (8 am – 12 pm)','Afternoon (12 pm – 5 pm)','Flexible'].map(v=>({label:v,value:v}))}/>{errors.time && <p className="field-error mt-2">{errors.time}</p>}</div><div className="mt-6 rounded-lg bg-secondary p-4"><p className="flex items-center gap-2 text-sm font-semibold"><CalendarDays size={17} className="text-primary"/>A preference, not a reservation</p><p className="field-help mt-2">Matelink checks availability and agrees the final date and time with you.</p></div></div></div>}
+        {step===4 && <div className="grid gap-5 sm:grid-cols-2"><FormField id="customer-name" label="Full name" autoComplete="name" value={draft.customer.name} onChange={e=>patchCustomer('name',e.target.value)} error={errors.name}/><FormField id="customer-mobile" label="Mobile number" type="tel" autoComplete="tel" value={draft.customer.mobile} onChange={e=>patchCustomer('mobile',e.target.value)} error={errors.mobile}/><FormField id="customer-email" label="Email address" type="email" autoComplete="email" className="sm:col-span-2" value={draft.customer.email} onChange={e=>patchCustomer('email',e.target.value)} error={errors.email}/><FormField id="customer-address" label="Property address" autoComplete="street-address" className="sm:col-span-2" value={draft.customer.address} onChange={e=>patchCustomer('address',e.target.value)} error={errors.address}/><div className="sm:col-span-2"><Label className="input-label mb-2 block" htmlFor="customer-notes">Anything we should know? <span className="font-normal text-muted-foreground">(optional)</span></Label><Textarea id="customer-notes" className="min-h-28 bg-white" placeholder="Access, parking, pets or areas that need extra care…" value={draft.customer.notes} onChange={e=>patchCustomer('notes',e.target.value)} maxLength={2500}/></div></div>}
+        {step===5 && <><div className="space-y-5"><ReviewBlock title="Your clean" onEdit={()=>changeStep(0)}><p>{services.find(s=>s.id===draft.service).name}</p><p className="text-muted-foreground capitalize">{draft.property} · {draft.bedrooms} bedrooms · {draft.bathrooms} bathrooms</p></ReviewBlock><ReviewBlock title="Preferred date" onEdit={()=>changeStep(3)}><p>{formatDate(draft.date)} · {draft.time}</p></ReviewBlock><ReviewBlock title="Your details" onEdit={()=>changeStep(4)}><p>{draft.customer.name}</p><p className="break-words text-muted-foreground">{draft.customer.email} · {draft.customer.mobile}</p><p className="text-muted-foreground">{draft.customer.address}, {draft.postcode}</p>{draft.customer.notes && <p className="mt-2 text-muted-foreground">{draft.customer.notes}</p>}</ReviewBlock><div className="rounded-xl bg-secondary p-5"><p className="text-sm font-semibold">{estimate.ready?'Your calculated estimate':'Your price will be confirmed before the clean'}</p><p className="mt-2 text-2xl font-semibold">{estimate.ready?amountLabel(estimate.total):'Price to be confirmed'}</p><p className="field-help mt-3">{estimate.ready ? 'This amount is based on the selected scope. Matelink reviews and confirms the job manually.' : 'Service rates have not been supplied for this preview. We have not guessed a price.'}</p></div></div><div className="mt-6 flex items-start gap-3"><Checkbox id="booking-consent" className="mt-1" checked={consent} onCheckedChange={value=>{setConsent(value===true);setErrors({});}} aria-invalid={!!errors.consent}/><Label className="block text-sm font-normal leading-relaxed" htmlFor="booking-consent">I understand this is a booking request, and my date and price require confirmation. I acknowledge the <Link className="text-primary underline" to="/terms" target="_blank">terms</Link> and <Link className="text-primary underline" to="/privacy" target="_blank">privacy details</Link>.</Label></div>{errors.consent && <p className="field-error mt-3">{errors.consent}</p>}</>}
+        {errors.general && <p className="field-error mt-4" role="alert">{errors.general}</p>}
+        <div className="mt-8 flex items-center justify-between gap-4 border-t pt-6"><Button type="button" variant="ghost" onClick={()=>step===0?setPostcodeChecked(false):changeStep(step-1)}>Back</Button>{step<5 ? <Button type="button" className="h-12 px-7" onClick={next}>Continue</Button> : <Button type="button" className="h-12 px-5 text-xs sm:px-7 sm:text-sm" disabled={submitting} onClick={submit}>{submitting?'Saving request…':'REQUEST MY CLEAN'}</Button>}</div>
+      </section><p className="field-help mt-5 flex items-center justify-center gap-2"><ShieldCheck size={15}/>No upfront payment. No account needed.</p></div><BookingSummary draft={draft} settings={settings} estimate={estimate}/></div>
+    </>}
+  </div></div>;
+}
+function ReviewBlock({title,children,onEdit}) {return <div className="border-b pb-5"><div className="mb-3 flex justify-between gap-3"><h3 className="text-sm font-semibold tracking-normal">{title}</h3><Button type="button" variant="ghost" size="sm" className="h-6 text-xs text-primary" onClick={onEdit}><Pencil size={12}/>Edit</Button></div><div className="space-y-1 text-sm">{children}</div></div>;}

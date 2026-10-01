@@ -1,0 +1,107 @@
+{
+  "project": "Matelink Cleaning",
+  "verified_on": "2026-10-01",
+  "verification": "All five source pages explicitly label each image free under the provider license. Both official license pages were read, all files downloaded successfully as JPEGs, and all five photographs visually inspected.",
+  "license_checks": {
+    "Unsplash": {
+      "url": "https://unsplash.com/license",
+      "commercial_use": true,
+      "attribution_required": false,
+      "modification_permitted": true
+    },
+    "Pexels": {
+      "url": "https://www.pexels.com/license/",
+      "commercial_website_use": true,
+      "attribution_required": false,
+      "modification_permitted": true
+    }
+  },
+  "usage_note": "Use as illustrative stock photography. These are not documented Matelink Cleaning jobs and no Australian location is claimed.",
+  "assets": [
+    {
+      "id": "hero",
+      "role": "Living-room hero",
+      "path": "public/images/hero.webp",
+      "title": "A bright, modern living room with comfortable furniture",
+      "photographer": "Luis Redondo",
+      "provider": "Unsplash",
+      "source_page_url": "https://unsplash.com/photos/a-bright-modern-living-room-with-comfortable-furniture-jw_Y7R3NabQ",
+      "direct_image_url": "https://images.unsplash.com/photo-1741288340498-d78d59a33675?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+      "download_url": "https://images.unsplash.com/photo-1741288340498-d78d59a33675?auto=format&fit=crop&fm=jpg&q=85&w=2400",
+      "license_url": "https://unsplash.com/license",
+      "license_name": "Unsplash License",
+      "width": 2400,
+      "height": 1600,
+      "alt": "Light-filled living room with neutral sofas, timber furniture, and indoor plants",
+      "selection_note": "Wide, bright neutral interior, suitable for premium hero. Real photo; Canon EOS R6 listed on source page."
+    },
+    {
+      "id": "deep-cleaning",
+      "role": "Deep Cleaning service",
+      "path": "public/images/deep-cleaning.webp",
+      "title": "Modern white kitchen with island and stainless steel appliances",
+      "photographer": "Scott Goodwill",
+      "provider": "Unsplash",
+      "source_page_url": "https://unsplash.com/photos/modern-white-kitchen-with-island-and-stainless-steel-appliances-funHg3XZCas",
+      "direct_image_url": "https://images.unsplash.com/photo-1779314687592-7d64bea77e8a?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+      "download_url": "https://images.unsplash.com/photo-1779314687592-7d64bea77e8a?auto=format&fit=crop&fm=jpg&q=85&w=1600",
+      "license_url": "https://unsplash.com/license",
+      "license_name": "Unsplash License",
+      "width": 1600,
+      "height": 1069,
+      "alt": "Clean white kitchen with glossy island, sink, and stainless steel appliances",
+      "selection_note": "Kitchen surfaces and fixtures provide a distinct image for Deep Cleaning. Real photo; Canon EOS 6D listed on source page."
+    },
+    {
+      "id": "move-in",
+      "role": "Move-In Cleaning service",
+      "path": "public/images/move-in-cleaning.webp",
+      "title": "Empty apartment with packed carton boxes before moving",
+      "photographer": "Ketut Subiyanto",
+      "provider": "Pexels",
+      "source_page_url": "https://www.pexels.com/photo/empty-apartment-with-packed-carton-boxes-before-moving-4246119/",
+      "direct_image_url": "https://images.pexels.com/photos/4246119/pexels-photo-4246119.jpeg?auto=compress&dpr=1&h=750&w=1260",
+      "download_url": "https://images.pexels.com/photos/4246119/pexels-photo-4246119.jpeg?auto=compress&cs=tinysrgb&w=1600",
+      "license_url": "https://www.pexels.com/license/",
+      "license_name": "Pexels License",
+      "width": 1600,
+      "height": 1067,
+      "alt": "Cardboard moving boxes and a covered chair in a bright living space",
+      "selection_note": "Sunlit home interior with moving boxes makes Move-In visually distinct. Real photo; Sony ILCE-7M3 listed on source page."
+    },
+    {
+      "id": "end-of-lease",
+      "role": "End-of-Lease Cleaning service",
+      "path": "public/images/end-of-lease-cleaning.webp",
+      "title": "An empty room with a balcony door",
+      "photographer": "Louie A",
+      "provider": "Unsplash",
+      "source_page_url": "https://unsplash.com/photos/an-empty-room-with-a-balcony-door-BYKNMKZkTA4",
+      "direct_image_url": "https://images.unsplash.com/photo-1753911371982-d5d1f0840366?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+      "download_url": "https://images.unsplash.com/photo-1753911371982-d5d1f0840366?auto=format&fit=crop&fm=jpg&q=85&w=1600",
+      "license_url": "https://unsplash.com/license",
+      "license_name": "Unsplash License",
+      "width": 1600,
+      "height": 1066,
+      "alt": "Clean empty apartment room with tiled floor and bright balcony doors",
+      "selection_note": "Unfurnished apartment clearly signals a property handover. Real photo; Nikon D7500 listed on source page."
+    },
+    {
+      "id": "about",
+      "role": "About section",
+      "path": "public/images/about.webp",
+      "title": "Modern Living Room",
+      "photographer": "Jonathan Borba",
+      "provider": "Pexels",
+      "source_page_url": "https://www.pexels.com/photo/modern-living-room-9976124/",
+      "direct_image_url": "https://images.pexels.com/photos/9976124/pexels-photo-9976124.jpeg?auto=compress&dpr=1&h=750&w=1260",
+      "download_url": "https://images.pexels.com/photos/9976124/pexels-photo-9976124.jpeg?auto=compress&cs=tinysrgb&w=1600",
+      "license_url": "https://www.pexels.com/license/",
+      "license_name": "Pexels License",
+      "width": 1600,
+      "height": 2400,
+      "alt": "Warm neutral living room with cream sofa, curved timber chairs, and tall curtains",
+      "selection_note": "Portrait composition for an About section; warm cream and timber palette. Real photo; Canon EOS 6D listed on source page."
+    }
+  ]
+}
