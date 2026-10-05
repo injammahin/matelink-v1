@@ -29,19 +29,12 @@
    ========================================================= */
 
 export const DEMO_PRICING = {
-  /*
-  |--------------------------------------------------------------------------
-  | SERVICE-BASED ROOM RATES
-  |--------------------------------------------------------------------------
-  |
-  | The selected clean controls the bedroom/bathroom rate.
-  |
-  | IMPORTANT:
-  | There is intentionally NO base price here.
-  |
-  */
-
   serviceRates: {
+    general: {
+      bedroom: 20,
+      bathroom: 30,
+    },
+
     deep: {
       bedroom: 25,
       bathroom: 35,
@@ -58,36 +51,19 @@ export const DEMO_PRICING = {
     },
   },
 
-
-  /*
-  |--------------------------------------------------------------------------
-  | ADD-ON DEMO PRICES
-  |--------------------------------------------------------------------------
-  */
-
   addonPrices: {
     carpet: 35,
-
     windows: 12,
-
     garage: 30,
-
     deck: 45,
-
     patio: 35,
-
     'small-balcony': 25,
-
     'large-balcony': 40,
-
     fridge: 25,
-
     blinds: 8,
-
     keys: 40,
   },
 };
-
 
 /* =========================================================
    RATE VALIDATION
@@ -167,16 +143,13 @@ export function getServiceRates(
       serviceId
     ] || {};
 
-
   const demo =
     DEMO_PRICING.serviceRates[
       serviceId
     ] || {
       bedroom: null,
-
       bathroom: null,
     };
-
 
   return {
     bedroom: isRate(
@@ -185,13 +158,11 @@ export function getServiceRates(
       ? configured.bedroom
       : demo.bedroom,
 
-
     bathroom: isRate(
       configured.bathroom
     )
       ? configured.bathroom
       : demo.bathroom,
-
 
     active:
       configured.active !== false,

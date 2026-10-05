@@ -23,6 +23,16 @@ import {
   ChevronDown,
   X,
   ReceiptText,
+  Waves,
+  AppWindow,
+  Warehouse,
+  Fence,
+  Sun,
+  Building2,
+  Building,
+  Refrigerator,
+  PanelsTopLeft,
+  KeyRound,
 } from 'lucide-react';
 
 import {
@@ -130,7 +140,39 @@ const stepDescriptions = [
 ];
 
 
+/* =========================================================
+   ADD-ON ICONS
+   ========================================================= */
 
+const addonIcons = {
+  carpet: Waves,
+
+  windows: AppWindow,
+
+  garage: Warehouse,
+
+  deck: Fence,
+
+  patio: Sun,
+
+  'small-balcony': Building2,
+
+  'large-balcony': Building,
+
+  fridge: Refrigerator,
+
+  blinds: PanelsTopLeft,
+
+  keys: KeyRound,
+};
+
+
+function getAddonIcon(addonId) {
+  return (
+    addonIcons[addonId] ||
+    Sparkles
+  );
+}
 /* =========================================================
    DEFAULT DRAFT
    ========================================================= */
@@ -1509,6 +1551,9 @@ export default function BookingPage() {
                                 extra,
                                 quantity
                               );
+                            
+                            const AddonIcon =
+                               getAddonIcon(extra.id);
 
 
                             /*
@@ -1538,12 +1583,26 @@ export default function BookingPage() {
                                     TITLE + CHECKBOX
                                 ================================== */}
 
-                                <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-start justify-between gap-4">
 
-                                  <Label
-                                    htmlFor={`extra-${extra.id}`}
-                                    className="block cursor-pointer"
-                                  >
+                                <Label
+                                  htmlFor={`extra-${extra.id}`}
+                                  className="flex min-w-0 flex-1 cursor-pointer items-start gap-3"
+                                >
+
+                                  {/* ICON */}
+
+                                  <span className="addon-card-icon">
+                                    <AddonIcon
+                                      size={20}
+                                      strokeWidth={1.8}
+                                    />
+                                  </span>
+
+
+                                  {/* TEXT */}
+
+                                  <span className="min-w-0 flex-1">
 
                                     <span className="block text-sm font-semibold">
                                       {extra.name}
@@ -1553,33 +1612,31 @@ export default function BookingPage() {
                                       {extra.description}
                                     </span>
 
-                                  </Label>
+                                  </span>
+
+                                </Label>
 
 
-                                  <Checkbox
-                                    id={`extra-${extra.id}`}
-                                    checked={selected}
-                                    onCheckedChange={(
-                                      checked
-                                    ) => {
-                                      patch({
-                                        addons: {
-                                          ...draft.addons,
+                                {/* CHECKBOX */}
 
-                                          /*
-                                          * Checked = start at 1.
-                                          * Unchecked = quantity 0.
-                                          */
-                                          [extra.id]:
-                                            checked
-                                              ? 1
-                                              : 0,
-                                        },
-                                      });
-                                    }}
-                                  />
+                                <Checkbox
+                                  id={`extra-${extra.id}`}
+                                  checked={quantity > 0}
+                                  onCheckedChange={(checked) =>
+                                    patch({
+                                      addons: {
+                                        ...draft.addons,
 
-                                </div>
+                                        [extra.id]:
+                                          checked
+                                            ? 1
+                                            : 0,
+                                      },
+                                    })
+                                  }
+                                />
+
+                              </div>
 
 
                                 {/* =================================

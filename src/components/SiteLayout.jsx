@@ -25,6 +25,9 @@ import {
   CalendarDays,
   ShieldCheck,
   Sparkles,
+  House,
+  Truck,
+  KeyRound,
   UserRound,
   LogOut,
   LogIn,
@@ -99,7 +102,20 @@ function Header() {
     user,
     logout,
   } = useAuth();
+  const serviceIcons = {
+    general: House,
+    deep: Sparkles,
+    'move-in': Truck,
+    'end-of-lease': KeyRound,
+  };
 
+
+  function getServiceIcon(serviceId) {
+    return (
+      serviceIcons[serviceId] ||
+      Sparkles
+    );
+  }
   /*
   |--------------------------------------------------------------------------
   | CLOSE MENUS WHEN ROUTE CHANGES
@@ -399,8 +415,14 @@ function Header() {
                 </p>
 
                 <div className="service-dropdown-list">
-                  {services.map(
-                    (service) => (
+
+                  {services.map((service) => {
+                    const ServiceIcon =
+                      getServiceIcon(
+                        service.id
+                      );
+
+                    return (
                       <Link
                         key={service.id}
                         to={`/${service.slug}`}
@@ -409,18 +431,23 @@ function Header() {
                           setServicesOpen(false)
                         }
                       >
+
                         {/* ICON */}
 
                         <span className="service-dropdown-icon">
-                          <Sparkles
-                            size={17}
+
+                          <ServiceIcon
+                            size={18}
                             strokeWidth={1.9}
                           />
+
                         </span>
+
 
                         {/* TEXT */}
 
                         <span className="service-dropdown-text">
+
                           <span className="service-dropdown-title">
                             {service.name}
                           </span>
@@ -428,10 +455,13 @@ function Header() {
                           <span className="service-dropdown-description">
                             {service.ideal}
                           </span>
+
                         </span>
+
                       </Link>
-                    )
-                  )}
+                    );
+                  })}
+
                 </div>
 
                 <div className="service-dropdown-footer">

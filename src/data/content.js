@@ -1,5 +1,49 @@
 export const services = [
   {
+  id: 'general',
+
+  slug: 'general-cleaning',
+
+  name: 'General Cleaning',
+
+  short: 'general clean',
+
+  eyebrow: 'Everyday home care',
+
+  title:
+    'A fresh home,\nweek after week.',
+
+  summary:
+    'A practical routine clean for keeping your home fresh, comfortable and easy to enjoy.',
+
+  ideal:
+    'Routine care for your home',
+
+  cardText:
+    'A reliable everyday clean for regular home maintenance and a consistently fresh space.',
+
+  /*
+   * Temporary image.
+   *
+   * Replace later with your dedicated
+   * General Cleaning photo.
+   */
+  image:
+    '/images/hero.webp',
+
+  imageAlt:
+    'Bright and tidy living room prepared for routine home cleaning',
+
+  includes: [
+    'General dusting and surface wiping',
+    'Vacuuming accessible floor areas',
+    'Mopping hard floors',
+    'Kitchen surface cleaning',
+    'Bathroom surface cleaning',
+    'General tidying of accessible areas',
+  ],
+},
+  {
     id: 'deep', slug: 'deep-cleaning', name: 'Deep Cleaning', short: 'Deep clean',
     eyebrow: 'A little extra care', title: 'A deeper clean.\nA lighter feeling.',
     summary: 'Give the spaces you live in every day a little more attention. A thorough refresh for kitchens, bathrooms and the details in between.',

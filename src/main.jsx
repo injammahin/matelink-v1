@@ -14,7 +14,7 @@ import '@fontsource/manrope/800.css';
 
 import './styles/index.css';
 
-import App from './App';
+import App from './app/App';
 
 import {
   AppProvider,
