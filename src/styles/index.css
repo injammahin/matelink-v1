@@ -5040,9 +5040,9 @@ body:has(.site-header-hidden)
   color:
     var(--foreground);
 
-  font-size: 1.55rem;
+  font-size: 1.25rem;
 
-  font-weight: 800;
+  font-weight: 700;
 
   line-height: 1;
 
