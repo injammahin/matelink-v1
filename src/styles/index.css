@@ -1643,7 +1643,7 @@
 .hero-image-wrap {
   position: relative;
 
-  height: 620px;
+  height: 560px;
 
   overflow: hidden;
 
@@ -3457,7 +3457,7 @@
 
 
   .hero-image-wrap {
-    height: 340px;
+    height: 280px;
   }
 
 
