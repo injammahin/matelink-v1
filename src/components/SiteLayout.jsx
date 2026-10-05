@@ -73,13 +73,7 @@ export function Wordmark({ className = '' }) {
     <span className="wordmark-type">MATELINK<small>C L E A N I N G</small></span>
   </Link>;
 }
-export function PreviewRibbon() {
-  const [visible, setVisible] = useState(() => sessionStorage.getItem('matelink.hide-preview') !== '1');
-  if (!visible) return null;
-  return <div className="preview-ribbon"><span>Interactive preview</span><span aria-hidden="true">·</span><span>No live bookings or payments</span>
-    <button type="button" aria-label="Dismiss preview notice" className="absolute right-3 p-1" onClick={() => { setVisible(false); sessionStorage.setItem('matelink.hide-preview', '1'); }}><X size={13} /></button>
-  </div>;
-}
+
 function Header() {
   const [open, setOpen] = useState(false);
 
@@ -958,7 +952,24 @@ function Footer() {
   </footer>;
 }
 export default function SiteLayout() {
-  return <><a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-white focus:p-3">Skip to content</a><PreviewRibbon /><Header /><main id="main-content"><Outlet /></main><Footer /></>;
+  return (
+    <>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-white focus:p-3"
+      >
+        Skip to content
+      </a>
+
+      <Header />
+
+      <main id="main-content">
+        <Outlet />
+      </main>
+
+      <Footer />
+    </>
+  );
 }
 export function PostcodeCheck({ compact = false, onValid, initialValue = '' }) {
   const [code, setCode] = useState(initialValue);
