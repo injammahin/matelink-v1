@@ -13,9 +13,6 @@ import {
 import {
   BedDouble,
   Bath,
-  House,
-  Building2,
-  Hotel,
   Check,
   MapPin,
   Sparkles,
@@ -100,8 +97,8 @@ import {
 
 const steps = [
   'Your clean',
-  'Your home',
-  'Extras',
+  'Services',
+  'Add-on',
   'Your date',
   'About you',
   'Review',
@@ -110,8 +107,8 @@ const steps = [
 
 const stepTitles = [
   'What kind of fresh start?',
-  'Tell us about your home.',
-  'A little extra attention?',
+  'Choose your service details.',
+  'Choose your add-ons.',
   'When works for you?',
   'A few details about you.',
   'Everything look right?',
@@ -121,9 +118,9 @@ const stepTitles = [
 const stepDescriptions = [
   'Choose the clean that fits this moment.',
 
-  'These details help shape your cleaning scope and price.',
+  'Tell us how many bedrooms and bathrooms need cleaning.',
 
-  'Choose optional extras for your selected service.',
+  'Choose any optional add-ons for your selected clean.',
 
   'This is your preferred date, subject to Matelink’s confirmation.',
 
@@ -132,26 +129,6 @@ const stepDescriptions = [
   'Review your request. There’s no payment at this stage.',
 ];
 
-
-const propertyOptions = [
-  {
-    id: 'apartment',
-    name: 'Apartment',
-    icon: Building2,
-  },
-
-  {
-    id: 'house',
-    name: 'House',
-    icon: House,
-  },
-
-  {
-    id: 'townhouse',
-    name: 'Townhouse',
-    icon: Hotel,
-  },
-];
 
 
 /* =========================================================
@@ -188,15 +165,11 @@ function defaultDraft(params) {
   return {
     service,
 
-    property:
-      stored?.property ||
-      'apartment',
-
     bedrooms:
-      stored?.bedrooms ?? 2,
+      stored?.bedrooms ?? 0,
 
     bathrooms:
-      stored?.bathrooms ?? 1,
+      stored?.bathrooms ?? 0,
 
     addons:
       queryService &&
@@ -282,21 +255,18 @@ function BookingSummaryCard({
           </p>
 
 
-          {/* PROPERTY */}
+          {/* SERVICE DETAILS */}
 
           <p className="booking-summary-detail-row">
-            <House
+            <BedDouble
               size={16}
               className="shrink-0"
             />
 
-            <span className="capitalize">
-              {draft.property}
-            </span>
-
             <span>
-              · {draft.bedrooms} bed
-              · {draft.bathrooms} bath
+              {draft.bedrooms} bedroom{Number(draft.bedrooms) === 1 ? '' : 's'}
+              {' · '}
+              {draft.bathrooms} bathroom{Number(draft.bathrooms) === 1 ? '' : 's'}
             </span>
           </p>
 
@@ -1362,23 +1332,24 @@ export default function BookingPage() {
 
                   {step === 0 && (
 
-                    <RadioGroup
-                      value={
-                        draft.service
-                      }
-                      onValueChange={(
-                        value
-                      ) =>
-                        patch({
-                          service:
-                            value,
+                      <RadioGroup
+                        value={draft.service}
+                        onValueChange={(value) =>
+                          patch({
+                            service: value,
 
-                          addons: {},
-                        })
-                      }
-                      aria-label="Cleaning service"
-                      className="gap-3"
-                    >
+                            // Start service details from zero.
+                            bedrooms: 0,
+                            bathrooms: 0,
+
+                            // Add-ons belong to the previous service,
+                            // so reset them too.
+                            addons: {},
+                          })
+                        }
+                        aria-label="Cleaning service"
+                        className="gap-3"
+                      >
 
                       {services.map(
                         (service) => {
@@ -1428,15 +1399,6 @@ export default function BookingPage() {
                                     ' · Currently unavailable'}
                                 </p>
 
-                                <p className="service-choice-price">
-                                  Base price{' '}
-                                  <strong>
-                                    {amountLabel(
-                                      rates.base
-                                    )}
-                                  </strong>
-                                </p>
-
                               </div>
 
 
@@ -1462,117 +1424,42 @@ export default function BookingPage() {
 
 
                   {/* =============================================
-                      STEP 2 - PROPERTY
+                      STEP 2 - SERVICES
                   ============================================== */}
 
                   {step === 1 && (
-
                     <>
-
-                      <RadioGroup
-                        value={
-                          draft.property
-                        }
-                        onValueChange={(
-                          value
-                        ) =>
-                          patch({
-                            property:
-                              value,
-                          })
-                        }
-                        aria-label="Property type"
-                        className="grid gap-3 sm:grid-cols-3"
-                      >
-
-                        {propertyOptions.map(
-                          ({
-                            id,
-                            name,
-                            icon:
-                              Icon,
-                          }) => (
-
-                            <Label
-                              htmlFor={`property-${id}`}
-                              key={id}
-                              className="option-card cursor-pointer flex-col !gap-3 !p-5 text-center"
-                              data-selected={
-                                draft.property ===
-                                id
-                              }
-                            >
-
-                              <Icon
-                                size={26}
-                                className="text-primary"
-                              />
-
-                              <span className="text-sm font-semibold">
-                                {name}
-                              </span>
-
-                              <RadioGroupItem
-                                id={`property-${id}`}
-                                value={
-                                  id
-                                }
-                              />
-
-                            </Label>
-
-                          )
-                        )}
-
-                      </RadioGroup>
-
-
-                      <div className="mt-6">
-
+                      <div>
                         <Counter
-                          icon={
-                            BedDouble
-                          }
+                          icon={BedDouble}
                           label="Bedrooms"
                           helper="Studio? Select 0 bedrooms."
-                          value={
-                            draft.bedrooms
-                          }
+                          value={draft.bedrooms}
                           min={0}
                           max={8}
-                          onChange={(
-                            bedrooms
-                          ) =>
+                          onChange={(bedrooms) =>
                             patch({
                               bedrooms,
                             })
                           }
                         />
 
-
                         <Counter
                           icon={Bath}
                           label="Bathrooms"
-                          helper="Include ensuites and separate bathrooms."
-                          value={
-                            draft.bathrooms
-                          }
-                          min={1}
+                          helper="Select the number of bathrooms."
+                          value={draft.bathrooms}
+                          min={0}
                           max={8}
-                          onChange={(
-                            bathrooms
-                          ) =>
+                          onChange={(bathrooms) =>
                             patch({
                               bathrooms,
                             })
                           }
                         />
-
                       </div>
 
-
                       <div className="booking-inline-total">
-
                         <span>
                           Current estimate
                         </span>
@@ -1584,30 +1471,24 @@ export default function BookingPage() {
                               )
                             : 'To be confirmed'}
                         </strong>
-
                       </div>
 
-
                       <p className="field-help mt-5">
-                        Larger or unusual
-                        property?{' '}
+                        Larger or unusual cleaning requirement?{' '}
 
                         <Link
                           to="/get-a-quote"
                           className="font-semibold text-primary underline"
                         >
-                          Request a
-                          tailored quote.
+                          Request a tailored quote.
                         </Link>
                       </p>
-
                     </>
-
                   )}
 
 
                   {/* =============================================
-                      STEP 3 - EXTRAS
+                      STEP 3 - ADD-ON
                   ============================================== */}
 
                   {step === 2 && (
@@ -1833,7 +1714,7 @@ export default function BookingPage() {
 
 
                       <p className="field-help mt-5">
-                        Extras are
+                        Add-ons are
                         optional. You can
                         continue with
                         just your
@@ -2186,19 +2067,12 @@ export default function BookingPage() {
                             }
                           </p>
 
-                          <p className="text-muted-foreground capitalize">
-                            {
-                              draft.property
-                            }{' '}
-                            ·{' '}
-                            {
-                              draft.bedrooms
-                            }{' '}
-                            bedrooms ·{' '}
-                            {
-                              draft.bathrooms
-                            }{' '}
-                            bathrooms
+                          <p className="text-muted-foreground">
+                            {draft.bedrooms}{' '}
+                            bedroom{Number(draft.bedrooms) === 1 ? '' : 's'}
+                            {' · '}
+                            {draft.bathrooms}{' '}
+                            bathroom{Number(draft.bathrooms) === 1 ? '' : 's'}
                           </p>
 
 
@@ -2208,7 +2082,7 @@ export default function BookingPage() {
                             <div className="mt-3">
 
                               <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                Extras
+                                Add-ons
                               </p>
 
                               {selectedExtras.map(
@@ -2352,9 +2226,8 @@ export default function BookingPage() {
                                 Based on
                                 your
                                 selected
-                                service,
-                                home and
-                                extras.
+                                cleaning details
+                                and add-ons.
                               </p>
 
                             </div>

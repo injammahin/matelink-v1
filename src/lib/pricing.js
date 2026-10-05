@@ -3,14 +3,23 @@
 | Matelink Pricing
 |--------------------------------------------------------------------------
 |
-| During the static frontend/demo phase we use fallback demo prices.
+| Static frontend / demo pricing system.
 |
-| IMPORTANT:
-| If a real numeric value exists in settings/admin configuration,
-| that value always takes priority over the demo value.
+| CURRENT PRICING RULE:
 |
-| This means you can later connect Laravel/admin pricing without
-| rewriting the booking UI.
+| Estimated Total =
+|
+| Bedrooms
+| + Bathrooms
+| + Selected Add-ons
+|
+| There is NO:
+| - Service base price
+| - Apartment / House / Townhouse adjustment
+| - Property adjustment
+|
+| Later, when Laravel/admin pricing is connected, configured numeric
+| values will take priority over these demo fallback values.
 |
 */
 
@@ -20,49 +29,68 @@
    ========================================================= */
 
 export const DEMO_PRICING = {
+  /*
+  |--------------------------------------------------------------------------
+  | SERVICE-BASED ROOM RATES
+  |--------------------------------------------------------------------------
+  |
+  | The selected clean controls the bedroom/bathroom rate.
+  |
+  | IMPORTANT:
+  | There is intentionally NO base price here.
+  |
+  */
+
   serviceRates: {
     deep: {
-      base: 180,
       bedroom: 25,
       bathroom: 35,
     },
 
     'move-in': {
-      base: 220,
       bedroom: 30,
       bathroom: 40,
     },
 
     'end-of-lease': {
-      base: 280,
       bedroom: 35,
       bathroom: 45,
     },
   },
 
-  propertyAdjustments: {
-    apartment: 0,
-    house: 40,
-    townhouse: 25,
-  },
+
+  /*
+  |--------------------------------------------------------------------------
+  | ADD-ON DEMO PRICES
+  |--------------------------------------------------------------------------
+  */
 
   addonPrices: {
     carpet: 35,
+
     windows: 12,
+
     garage: 30,
+
     deck: 45,
+
     patio: 35,
+
     'small-balcony': 25,
+
     'large-balcony': 40,
+
     fridge: 25,
+
     blinds: 8,
+
     keys: 40,
   },
 };
 
 
 /* =========================================================
-   HELPERS
+   RATE VALIDATION
    ========================================================= */
 
 export function isRate(value) {
@@ -74,52 +102,96 @@ export function isRate(value) {
 }
 
 
+/* =========================================================
+   CURRENCY FORMATTER
+   ========================================================= */
+
 export function amountLabel(value) {
   if (!isRate(value)) {
     return 'To be confirmed';
   }
 
-  return new Intl.NumberFormat('en-AU', {
-    style: 'currency',
-    currency: 'AUD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
+  return new Intl.NumberFormat(
+    'en-AU',
+    {
+      style: 'currency',
 
+      currency: 'AUD',
 
-function money(value) {
-  return Math.round(value * 100) / 100;
+      minimumFractionDigits: 2,
+
+      maximumFractionDigits: 2,
+    }
+  ).format(value);
 }
 
 
 /* =========================================================
-   SERVICE RATE
+   MONEY ROUNDING
    ========================================================= */
 
-export function getServiceRates(settings, serviceId) {
+function money(value) {
+  return (
+    Math.round(
+      Number(value) * 100
+    ) / 100
+  );
+}
+
+
+/* =========================================================
+   SERVICE ROOM RATES
+   ========================================================= */
+
+/*
+|--------------------------------------------------------------------------
+| getServiceRates()
+|--------------------------------------------------------------------------
+|
+| This function only returns:
+|
+| - bedroom price
+| - bathroom price
+| - active status
+|
+| It DOES NOT return a service base price.
+|
+*/
+
+export function getServiceRates(
+  settings,
+  serviceId
+) {
   const configured =
-    settings?.serviceRates?.[serviceId] || {};
+    settings?.serviceRates?.[
+      serviceId
+    ] || {};
+
 
   const demo =
-    DEMO_PRICING.serviceRates[serviceId] || {
-      base: null,
+    DEMO_PRICING.serviceRates[
+      serviceId
+    ] || {
       bedroom: null,
+
       bathroom: null,
     };
 
-  return {
-    base: isRate(configured.base)
-      ? configured.base
-      : demo.base,
 
-    bedroom: isRate(configured.bedroom)
+  return {
+    bedroom: isRate(
+      configured.bedroom
+    )
       ? configured.bedroom
       : demo.bedroom,
 
-    bathroom: isRate(configured.bathroom)
+
+    bathroom: isRate(
+      configured.bathroom
+    )
       ? configured.bathroom
       : demo.bathroom,
+
 
     active:
       configured.active !== false,
@@ -128,59 +200,93 @@ export function getServiceRates(settings, serviceId) {
 
 
 /* =========================================================
-   PROPERTY PRICE
+   BACKWARD COMPATIBILITY
    ========================================================= */
 
-export function getPropertyAdjustment(
-  settings,
-  property
-) {
-  const configured =
-    settings?.propertyAdjustments?.[property];
+/*
+|--------------------------------------------------------------------------
+| getPropertyAdjustment()
+|--------------------------------------------------------------------------
+|
+| Property pricing has been removed from the booking flow.
+|
+| We keep this export temporarily so another old component importing it
+| does not crash the application.
+|
+| It will ALWAYS return 0.
+|
+| You can completely remove this function later if nothing imports it.
+|
+*/
 
-  if (isRate(configured)) {
-    return configured;
-  }
-
-  return (
-    DEMO_PRICING.propertyAdjustments[
-      property
-    ] ?? 0
-  );
+export function getPropertyAdjustment() {
+  return 0;
 }
 
 
 /* =========================================================
-   ADD-ONS
+   AVAILABLE ADD-ONS
    ========================================================= */
 
 export function availableAddons(
   settings,
   serviceId
 ) {
+  /*
+  |--------------------------------------------------------------------------
+  | ADD-ON GROUP
+  |--------------------------------------------------------------------------
+  |
+  | Deep Cleaning uses the "deep" group.
+  |
+  | Move-In and End-of-Lease use "shared".
+  |
+  */
+
   const group =
     serviceId === 'deep'
       ? 'deep'
       : 'shared';
 
-  return (settings?.addons || [])
-    .filter(
-      (addon) =>
-        addon.active &&
+
+  const addons =
+    settings?.addons || [];
+
+
+  return addons
+    .filter((addon) => {
+      return (
+        addon.active !== false &&
         addon.group === group
-    )
+      );
+    })
+
     .map((addon) => {
       const demoPrice =
-        DEMO_PRICING.addonPrices[
-          addon.id
-        ];
+        DEMO_PRICING
+          .addonPrices[
+            addon.id
+          ];
+
 
       return {
         ...addon,
 
-        price: isRate(addon.price)
+
+        /*
+         * Admin/config price gets priority.
+         *
+         * If no configured price exists,
+         * use our demo price.
+         */
+
+        price: isRate(
+          addon.price
+        )
           ? addon.price
-          : isRate(demoPrice)
+          : isRate(
+              demoPrice
+            )
             ? demoPrice
             : null,
       };
@@ -196,18 +302,63 @@ export function calculateAddonAmount(
   addon,
   quantity
 ) {
-  const qty = Number(quantity || 0);
+  const qty =
+    Number(
+      quantity || 0
+    );
+
+
+  /*
+   * Not selected.
+   */
+
+  if (qty <= 0) {
+    return null;
+  }
+
+
+  /*
+   * No usable price.
+   */
 
   if (
-    qty <= 0 ||
-    !isRate(addon?.price)
+    !isRate(
+      addon?.price
+    )
   ) {
     return null;
   }
 
+
+  /*
+   * Quantity-based add-on.
+   *
+   * Example:
+   *
+   * Carpet = $35 / room
+   * Quantity = 3
+   *
+   * $35 × 3 = $105
+   */
+
+  if (addon.quantity) {
+    return money(
+      addon.price *
+        qty
+    );
+  }
+
+
+  /*
+   * Fixed-price add-on.
+   *
+   * Example:
+   *
+   * Small Balcony = $25
+   */
+
   return money(
-    addon.price *
-      (addon.quantity ? qty : 1)
+    addon.price
   );
 }
 
@@ -216,107 +367,126 @@ export function calculateAddonAmount(
    COMPLETE BOOKING ESTIMATE
    ========================================================= */
 
+/*
+|--------------------------------------------------------------------------
+| calculatePrice()
+|--------------------------------------------------------------------------
+|
+| FINAL FORMULA:
+|
+| Bedrooms
+| + Bathrooms
+| + Selected Add-ons
+| ------------------------
+| Estimated Total
+|
+| NO service base.
+| NO property adjustment.
+|
+*/
+
 export function calculatePrice(
   draft,
   settings
 ) {
-  const rates = getServiceRates(
-    settings,
-    draft.service
-  );
+  /*
+  |--------------------------------------------------------------------------
+  | GET SELECTED SERVICE'S ROOM RATES
+  |--------------------------------------------------------------------------
+  */
+
+  const rates =
+    getServiceRates(
+      settings,
+      draft.service
+    );
+
 
   const items = [];
 
 
-  /* ---------------------------------------------------------
-     Service
-  --------------------------------------------------------- */
+  /* =========================================================
+     BEDROOMS
+     ========================================================= */
 
-  items.push({
-    id: 'service-base',
+  const bedrooms =
+    Math.max(
+      0,
+      Number(
+        draft.bedrooms || 0
+      )
+    );
 
-    label: 'Service base',
-
-    amount: rates.base,
-  });
-
-
-  /* ---------------------------------------------------------
-     Bedrooms
-  --------------------------------------------------------- */
 
   const bedroomAmount =
-    isRate(rates.bedroom)
+    isRate(
+      rates.bedroom
+    )
       ? money(
           rates.bedroom *
-            Number(
-              draft.bedrooms || 0
-            )
+            bedrooms
         )
       : null;
+
 
   items.push({
     id: 'bedrooms',
 
-    label: `${draft.bedrooms} bedroom${
-      Number(draft.bedrooms) === 1
+    label: `${bedrooms} bedroom${
+      bedrooms === 1
         ? ''
         : 's'
     }`,
 
-    amount: bedroomAmount,
+    amount:
+      bedroomAmount,
   });
 
 
-  /* ---------------------------------------------------------
-     Bathrooms
-  --------------------------------------------------------- */
+  /* =========================================================
+     BATHROOMS
+     ========================================================= */
+
+  const bathrooms =
+    Math.max(
+      0,
+      Number(
+        draft.bathrooms || 0
+      )
+    );
+
 
   const bathroomAmount =
-    isRate(rates.bathroom)
+    isRate(
+      rates.bathroom
+    )
       ? money(
           rates.bathroom *
-            Number(
-              draft.bathrooms || 0
-            )
+            bathrooms
         )
       : null;
+
 
   items.push({
     id: 'bathrooms',
 
-    label: `${draft.bathrooms} bathroom${
-      Number(draft.bathrooms) === 1
+    label: `${bathrooms} bathroom${
+      bathrooms === 1
         ? ''
         : 's'
     }`,
 
-    amount: bathroomAmount,
-  });
-
-
-  /* ---------------------------------------------------------
-     Property
-  --------------------------------------------------------- */
-
-  items.push({
-    id: 'property',
-
-    label: 'Property adjustment',
-
     amount:
-      getPropertyAdjustment(
-        settings,
-        draft.property
-      ),
+      bathroomAmount,
   });
 
 
-  /* ---------------------------------------------------------
-     Extras
-  --------------------------------------------------------- */
+  /* =========================================================
+     ADD-ONS
+     ========================================================= */
 
   let knownExtras = 0;
+
 
   const addons =
     availableAddons(
@@ -324,16 +494,26 @@ export function calculatePrice(
       draft.service
     );
 
-  for (const addon of addons) {
+
+  for (
+    const addon of addons
+  ) {
     const quantity =
       Number(
-        draft.addons?.[addon.id] ||
-          0
+        draft.addons?.[
+          addon.id
+        ] || 0
       );
+
+
+    /*
+     * Skip add-ons that have not been selected.
+     */
 
     if (quantity <= 0) {
       continue;
     }
+
 
     const amount =
       calculateAddonAmount(
@@ -341,78 +521,207 @@ export function calculatePrice(
         quantity
       );
 
-    items.push({
-      id: `addon-${addon.id}`,
 
-      label: addon.quantity
-        ? `${addon.name} × ${quantity}`
-        : addon.name,
+    items.push({
+      id:
+        `addon-${addon.id}`,
+
+      label:
+        addon.quantity
+          ? `${addon.name} × ${quantity}`
+          : addon.name,
 
       amount,
     });
 
-    if (isRate(amount)) {
-      knownExtras += amount;
+
+    if (
+      isRate(amount)
+    ) {
+      knownExtras +=
+        amount;
     }
   }
 
 
-  /* ---------------------------------------------------------
-     Total
-  --------------------------------------------------------- */
+  /* =========================================================
+     CAN WE SHOW A FINAL ESTIMATE?
+     ========================================================= */
+
+  /*
+   * Every visible line must have a numeric amount.
+   *
+   * If one required price is missing, we'll return:
+   *
+   * ready: false
+   * total: null
+   */
 
   const ready =
-    items.every((item) =>
-      isRate(item.amount)
+    items.length > 0 &&
+    items.every(
+      (item) =>
+        isRate(
+          item.amount
+        )
     );
 
-  const total = ready
-    ? money(
-        items.reduce(
-          (sum, item) =>
-            sum + item.amount,
-          0
-        )
-      )
-    : null;
 
+  /* =========================================================
+     TOTAL
+     ========================================================= */
+
+  const total =
+    ready
+      ? money(
+          items.reduce(
+            (
+              sum,
+              item
+            ) => {
+              return (
+                sum +
+                Number(
+                  item.amount
+                )
+              );
+            },
+            0
+          )
+        )
+      : null;
+
+
+  /* =========================================================
+     RETURN
+     ========================================================= */
 
   return {
+    /*
+     * Is complete pricing available?
+     */
+
     ready,
+
+
+    /*
+     * Complete estimated total.
+     */
+
     total,
+
+
+    /*
+     * Used by right-side summary,
+     * mobile drawer and review.
+     */
+
     items,
 
+
+    /*
+     * Total selected add-ons only.
+     */
+
     knownExtras:
-      money(knownExtras),
+      money(
+        knownExtras
+      ),
+
+
+    /*
+     * Optional useful breakdown values.
+     */
+
+    bedroomAmount,
+
+    bathroomAmount,
   };
 }
 
 
 /* =========================================================
-   POSTCODE
+   POSTCODE VALIDATION
    ========================================================= */
 
-export function validPostcode(code) {
-  return /^\d{4}$/.test(code);
+export function validPostcode(
+  code
+) {
+  return /^\d{4}$/.test(
+    String(
+      code || ''
+    ).trim()
+  );
 }
 
+
+/* =========================================================
+   POSTCODE AVAILABILITY
+   ========================================================= */
 
 export function postcodeAvailability(
   code,
   settings
 ) {
-  if (!validPostcode(code)) {
+  const postcode =
+    String(
+      code || ''
+    ).trim();
+
+
+  /*
+   * Must be an Australian-style
+   * four-digit postcode.
+   */
+
+  if (
+    !validPostcode(
+      postcode
+    )
+  ) {
     return 'invalid';
   }
 
+
+  /*
+   * If no postcodes have been configured yet,
+   * let the request continue for manual review.
+   */
+
   if (
-    !settings?.postcodes?.length
+    !Array.isArray(
+      settings?.postcodes
+    ) ||
+    settings.postcodes
+      .length === 0
   ) {
     return 'review';
   }
 
-  return settings.postcodes.includes(
-    code
+
+  /*
+   * Convert configured postcodes to strings.
+   *
+   * This protects against:
+   *
+   * 2000
+   *
+   * versus:
+   *
+   * "2000"
+   */
+
+  const configuredPostcodes =
+    settings.postcodes.map(
+      (item) =>
+        String(
+          item
+        ).trim()
+    );
+
+
+  return configuredPostcodes.includes(
+    postcode
   )
     ? 'available'
     : 'unavailable';
