@@ -1126,17 +1126,17 @@ export default function BookingPage() {
   return (
     <div className="bg-muted pb-20">
 
-      <div className="container-site pt-12">
+      <div className="container-site pt-6">
 
         {/* INTRO */}
 
-        <div className="mb-9">
+        <div className="mb-5">
 
           <p className="eyebrow mb-2">
             A fresh start, made simple
           </p>
-
-          {/* <h1 className="text-3xl sm:text-4xl">
+{/* 
+          <h1 className="text-3xl sm:text-4xl">
             Let’s make it your clean.
           </h1>
 
