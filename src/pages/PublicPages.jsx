@@ -15,7 +15,7 @@ const serviceIcons = { deep: Sparkles, 'move-in': House, 'end-of-lease': KeyRoun
 export function HomePage() {
   return <>
     <section className="container-site hero-grid">
-      <div className="hero-copy"><p className="eyebrow">Sydney home cleaning</p><h1 className="hero-title">A cleaner home.<br />A little more<br /><em>room to breathe.</em></h1><p className="body-copy max-w-[470px]">From a much-needed refresh to a brand-new beginning, we help you care for the place you call home.</p><PostcodeCheck /><p className="mt-5 text-sm text-muted-foreground">Something a little different? <Link className="font-semibold text-navy underline underline-offset-4" to="/get-a-quote">Get a tailored quote</Link></p></div>
+      <div className="hero-copy"><h1 className="hero-title">Sydney Home Cleaning</h1><p className="body-copy max-w-[470px]">From a much-needed refresh to a brand-new beginning, we help you care for the place you call home.</p><PostcodeCheck /><p className="mt-5 text-sm text-muted-foreground">Something a little different? <Link className="font-semibold text-navy underline underline-offset-4" to="/get-a-quote">Get a tailored quote</Link></p></div>
       <div className="hero-image-wrap"><img src="/images/hero.webp" width="1900" height="1267" fetchPriority="high" alt="Light-filled living room with neutral sofas, timber furniture and indoor plants" /><div className="hero-image-tag"><div className="icon-square !h-11 !w-11"><Sparkles size={22} /></div><div><p className="text-sm font-semibold">For all of life’s fresh starts.</p><p className="mt-1 text-xs text-muted-foreground">Deep clean · Move in · Move out</p></div></div></div>
     </section>
     <FeatureStrip />
