@@ -228,72 +228,36 @@ export function getPropertyAdjustment() {
    AVAILABLE ADD-ONS
    ========================================================= */
 
+/* =========================================================
+   AVAILABLE ADD-ONS
+   ========================================================= */
+
 export function availableAddons(
   settings,
   serviceId
 ) {
-  /*
-  |--------------------------------------------------------------------------
-  | ADD-ON GROUP
-  |--------------------------------------------------------------------------
-  |
-  | Deep Cleaning uses the "deep" group.
-  |
-  | Move-In and End-of-Lease use "shared".
-  |
-  */
-
-  const group =
-    serviceId === 'deep'
-      ? 'deep'
-      : 'shared';
-
-
-  const addons =
-    settings?.addons || [];
-
-
-  return addons
-    .filter((addon) => {
-      return (
-        addon.active !== false &&
-        addon.group === group
-      );
-    })
-
+  return (settings?.addons || [])
+    .filter(
+      (addon) =>
+        addon.active !== false
+    )
     .map((addon) => {
       const demoPrice =
-        DEMO_PRICING
-          .addonPrices[
-            addon.id
-          ];
-
+        DEMO_PRICING.addonPrices[
+          addon.id
+        ];
 
       return {
         ...addon,
 
-
-        /*
-         * Admin/config price gets priority.
-         *
-         * If no configured price exists,
-         * use our demo price.
-         */
-
-        price: isRate(
-          addon.price
-        )
+        price: isRate(addon.price)
           ? addon.price
-          : isRate(
-              demoPrice
-            )
+          : isRate(demoPrice)
             ? demoPrice
             : null,
       };
     });
 }
-
-
 /* =========================================================
    ADD-ON LINE TOTAL
    ========================================================= */
