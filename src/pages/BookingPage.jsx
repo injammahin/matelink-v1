@@ -1492,110 +1492,112 @@ export default function BookingPage() {
                   ============================================== */}
 
                   {step === 2 && (
-
                     <>
-
-                      {extras.length >
-                      0 ? (
-
+                      {extras.length > 0 ? (
                         <div className="addon-grid">
 
-                          {extras.map(
-                            (extra) => {
-                              const quantity =
-                                Number(
-                                  draft
-                                    .addons?.[
-                                    extra
-                                      .id
-                                  ] || 0
-                                );
+                          {extras.map((extra) => {
+                            const quantity = Number(
+                              draft.addons?.[extra.id] || 0
+                            );
 
-                              const lineTotal =
-                                calculateAddonAmount(
-                                  extra,
-                                  quantity
-                                );
+                            const selected =
+                              quantity > 0;
+
+                            const lineTotal =
+                              calculateAddonAmount(
+                                extra,
+                                quantity
+                              );
 
 
-                              return (
-
-                                <div
-                                  className={`booking-addon-card ${
-                                    quantity >
-                                    0
-                                      ? 'is-selected'
-                                      : ''
-                                  }`}
-                                  key={
-                                    extra.id
-                                  }
-                                >
-
-                                  <div className="flex items-start justify-between gap-3">
-
-                                    <Label
-                                      htmlFor={`extra-${extra.id}`}
-                                      className="block cursor-pointer"
-                                    >
-
-                                      <span className="block text-sm font-semibold">
-                                        {
-                                          extra.name
-                                        }
-                                      </span>
-
-                                      <span className="field-help mt-2 block">
-                                        {
-                                          extra.description
-                                        }
-                                      </span>
-
-                                    </Label>
+                            /*
+                            * Optional unit label.
+                            *
+                            * If your addon already has a unit,
+                            * use it.
+                            *
+                            * Otherwise use "item".
+                            */
+                            const unit =
+                              extra.unit ||
+                              'item';
 
 
-                                    <Checkbox
-                                      id={`extra-${extra.id}`}
-                                      checked={
-                                        quantity >
-                                        0
-                                      }
-                                      onCheckedChange={(
-                                        checked
-                                      ) =>
-                                        patch({
-                                          addons:
-                                            {
-                                              ...draft.addons,
+                            return (
+                              <div
+                                key={extra.id}
+                                className={`booking-addon-card ${
+                                  selected
+                                    ? 'is-selected'
+                                    : ''
+                                }`}
+                              >
 
-                                              [extra.id]:
-                                                checked
-                                                  ? 1
-                                                  : 0,
-                                            },
-                                        })
-                                      }
-                                    />
+                                {/* =================================
+                                    TITLE + CHECKBOX
+                                ================================== */}
 
-                                  </div>
+                                <div className="flex items-start justify-between gap-3">
 
+                                  <Label
+                                    htmlFor={`extra-${extra.id}`}
+                                    className="block cursor-pointer"
+                                  >
 
-                                  {/* PRICE */}
-
-                                  <div className="addon-price-row">
-
-                                    <span>
-                                      {extra.quantity
-                                        ? `${amountLabel(
-                                            extra.price
-                                          )} / ${extra.unit}`
-                                        : amountLabel(
-                                            extra.price
-                                          )}
+                                    <span className="block text-sm font-semibold">
+                                      {extra.name}
                                     </span>
 
-                                    {lineTotal !==
-                                      null && (
+                                    <span className="field-help mt-2 block">
+                                      {extra.description}
+                                    </span>
+
+                                  </Label>
+
+
+                                  <Checkbox
+                                    id={`extra-${extra.id}`}
+                                    checked={selected}
+                                    onCheckedChange={(
+                                      checked
+                                    ) => {
+                                      patch({
+                                        addons: {
+                                          ...draft.addons,
+
+                                          /*
+                                          * Checked = start at 1.
+                                          * Unchecked = quantity 0.
+                                          */
+                                          [extra.id]:
+                                            checked
+                                              ? 1
+                                              : 0,
+                                        },
+                                      });
+                                    }}
+                                  />
+
+                                </div>
+
+
+                                {/* =================================
+                                    PRICE
+                                ================================== */}
+
+                                <div className="addon-price-row">
+
+                                  <span>
+                                    {amountLabel(
+                                      extra.price
+                                    )}{' '}
+                                    / {unit}
+                                  </span>
+
+
+                                  {selected &&
+                                    lineTotal !== null && (
                                       <strong>
                                         {amountLabel(
                                           lineTotal
@@ -1603,59 +1605,44 @@ export default function BookingPage() {
                                       </strong>
                                     )}
 
-                                  </div>
-
-
-                                  {/* QUANTITY */}
-
-                                  {quantity >
-                                    0 &&
-                                    extra.quantity && (
-
-                                      <div className="mt-4">
-
-                                        <Counter
-                                          label={`${extra.unit
-                                            .charAt(
-                                              0
-                                            )
-                                            .toUpperCase()}${extra.unit.slice(
-                                            1
-                                          )}s`}
-                                          value={
-                                            quantity
-                                          }
-                                          min={1}
-                                          max={30}
-                                          onChange={(
-                                            value
-                                          ) =>
-                                            patch({
-                                              addons:
-                                                {
-                                                  ...draft.addons,
-
-                                                  [extra.id]:
-                                                    value,
-                                                },
-                                            })
-                                          }
-                                        />
-
-                                      </div>
-
-                                    )}
-
                                 </div>
 
-                              );
-                            }
-                          )}
+
+                                {/* =================================
+                                    QUANTITY FOR EVERY ADD-ON
+                                ================================== */}
+
+                                {selected && (
+                                  <div className="addon-quantity-section">
+
+                                    <Counter
+                                      label="Quantity"
+                                      value={quantity}
+                                      min={0}
+                                      max={30}
+                                      onChange={(
+                                        value
+                                      ) => {
+                                        patch({
+                                          addons: {
+                                            ...draft.addons,
+
+                                            [extra.id]:
+                                              value,
+                                          },
+                                        });
+                                      }}
+                                    />
+
+                                  </div>
+                                )}
+
+                              </div>
+                            );
+                          })}
 
                         </div>
-
                       ) : (
-
                         <div className="rounded-xl bg-secondary p-7">
 
                           <Sparkles
@@ -1664,17 +1651,13 @@ export default function BookingPage() {
                           />
 
                           <h3 className="text-xl">
-                            Keep it simple,
-                            or tell us more.
+                            Keep it simple, or tell us more.
                           </h3>
 
                           <p className="body-copy mt-3 text-sm">
-                            You can share
-                            any special
-                            requirements
-                            in your notes,
-                            or request a
-                            tailored quote
+                            You can share any special
+                            requirements in your notes,
+                            or request a tailored quote
                             for extra work.
                           </p>
 
@@ -1684,17 +1667,17 @@ export default function BookingPage() {
                             className="mt-5"
                           >
                             <Link to="/get-a-quote">
-                              Get a tailored
-                              quote
+                              Get a tailored quote
                             </Link>
                           </Button>
 
                         </div>
-
                       )}
 
 
-                      {/* STEP TOTAL */}
+                      {/* =========================================
+                          TOTAL
+                      ========================================== */}
 
                       <div className="booking-inline-total">
 
@@ -1714,15 +1697,12 @@ export default function BookingPage() {
 
 
                       <p className="field-help mt-5">
-                        Add-ons are
-                        optional. You can
-                        continue with
-                        just your
-                        selected clean.
+                        Add-ons are optional. You can
+                        continue with just your selected
+                        clean.
                       </p>
 
                     </>
-
                   )}
 
 
@@ -2102,18 +2082,10 @@ export default function BookingPage() {
                                   return (
 
                                     <p
-                                      key={
-                                        addon.id
-                                      }
+                                      key={addon.id}
                                       className="text-muted-foreground"
                                     >
-                                      {
-                                        addon.name
-                                      }
-
-                                      {addon.quantity
-                                        ? ` × ${quantity}`
-                                        : ''}
+                                      {addon.name} × {quantity}
                                     </p>
 
                                   );

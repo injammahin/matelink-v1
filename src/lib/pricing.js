@@ -262,67 +262,46 @@ export function availableAddons(
    ADD-ON LINE TOTAL
    ========================================================= */
 
+
 export function calculateAddonAmount(
   addon,
   quantity
 ) {
-  const qty =
-    Number(
-      quantity || 0
-    );
-
+  const qty = Math.max(
+    0,
+    Number(quantity || 0)
+  );
 
   /*
-   * Not selected.
+   * Add-on is not selected.
    */
-
   if (qty <= 0) {
     return null;
   }
 
-
   /*
-   * No usable price.
+   * Add-on does not have a valid price.
    */
-
-  if (
-    !isRate(
-      addon?.price
-    )
-  ) {
+  if (!isRate(addon?.price)) {
     return null;
   }
 
-
   /*
-   * Quantity-based add-on.
+   * EVERY add-on is now quantity based.
    *
-   * Example:
+   * Examples:
    *
-   * Carpet = $35 / room
-   * Quantity = 3
+   * Garage Sweep:
+   * $30 × 2 = $60
    *
-   * $35 × 3 = $105
+   * Deck Clean:
+   * $45 × 3 = $135
+   *
+   * Carpet:
+   * $35 × 4 = $140
    */
-
-  if (addon.quantity) {
-    return money(
-      addon.price *
-        qty
-    );
-  }
-
-
-  /*
-   * Fixed-price add-on.
-   *
-   * Example:
-   *
-   * Small Balcony = $25
-   */
-
   return money(
-    addon.price
+    addon.price * qty
   );
 }
 
@@ -487,13 +466,12 @@ export function calculatePrice(
 
 
     items.push({
-      id:
-        `addon-${addon.id}`,
+      id: `addon-${addon.id}`,
 
-      label:
-        addon.quantity
-          ? `${addon.name} × ${quantity}`
-          : addon.name,
+      /*
+      * Every add-on has quantity now.
+      */
+      label: `${addon.name} × ${quantity}`,
 
       amount,
     });

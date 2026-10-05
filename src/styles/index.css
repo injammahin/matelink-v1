@@ -5170,3 +5170,62 @@ body:has(.site-header-hidden)
   }
 
 }
+/* =========================================================
+   ADD-ON QUANTITY
+   ========================================================= */
+
+.addon-quantity-section {
+  margin-top: 18px;
+
+  padding-top: 14px;
+
+  border-top:
+    1px solid
+    rgba(
+      8,
+      126,
+      131,
+      0.12
+    );
+}
+
+
+.booking-addon-card.is-selected
+.addon-quantity-section {
+  border-top-color:
+    rgba(
+      8,
+      126,
+      131,
+      0.18
+    );
+}
+
+
+/* Keep counter nicely aligned */
+
+.addon-quantity-section
+.count-control {
+  padding: 0;
+
+  border-bottom: 0;
+}
+
+
+/* Slightly smaller on add-on cards */
+
+.addon-quantity-section
+.count-control > div:first-child {
+  font-size: 0.82rem;
+}
+
+
+@media(max-width:700px) {
+
+  .addon-quantity-section {
+    margin-top: 15px;
+
+    padding-top: 13px;
+  }
+
+}
